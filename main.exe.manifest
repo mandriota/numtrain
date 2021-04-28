@@ -3,7 +3,7 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="*"
-    name="MarkMandriota.NumbersTrainer.Trainer"
+    name="MarkMandriota.NumberTrainer.SummationTrainer"
     type="win32"
 />
 <description>Numbers trainer</description>
