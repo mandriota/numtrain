@@ -1,2 +1,4 @@
+#pragma code_page(65001)
+
 100 ICON "main.ico"
 1 24 "main.exe.manifest"

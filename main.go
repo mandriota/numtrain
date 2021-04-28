@@ -2,57 +2,53 @@ package main
 
 import (
 	"crypto/rand"
-	"flag"
+	"math"
 	"math/big"
 	"time"
 
-	"github.com/andlabs/ui"
+	. "github.com/andlabs/ui"
 )
-
-var (
-	maxn = flag.Int64("maxn", 10, "")
-)
-
-func init() {
-	flag.Parse()
-}
 
 func main() {
-	ui.Main(setupUI)
+	Main(setupUI)
 }
 
 func setupUI() {
 	win := mainWindows()
 
-	vb := ui.NewVerticalBox()
-	params := ui.NewGroup("Parameters")
-	form := ui.NewForm()
+	content := NewVerticalBox()
+	params := NewGroup("Parameters")
+	form := NewForm()
 
-	dur := formSlider(form, "One show time(ms)", 5000)
-	num := formSlider(form, "Shows number", 50)
+	dur := formSlider(form, "Showing time(ms)", 100, 5000)
+	num := formSlider(form, "Shows number", 1, 50)
+	dig := formSlider(form, "Digits number", 1, 10)
 
 	params.SetChild(form)
-	vb.Append(params, true)
+	content.Append(params, true)
 
-	hb := ui.NewHorizontalBox()
-	number := ui.NewGroup("Number")
-	ovb := ui.NewVerticalBox()
+	hb := NewHorizontalBox()
+	number := NewGroup("Number")
+	ovb := NewVerticalBox()
 
 	outHand := &areaHandler{text: "0"}
-	outArea := ui.NewArea(outHand)
+	outArea := NewArea(outHand)
 	outArea.Disable()
 
 	ovb.Append(outArea, true)
 
 	sum := big.NewInt(0)
-	buttonGo := ui.NewButton("Go!")
-	buttonGo.OnClicked(func(b *ui.Button) {
+	buttonGo := NewButton("Go!")
+	buttonGo.OnClicked(func(b *Button) {
 		go func() {
 			ticker := time.NewTicker(time.Duration(dur.Value()) * time.Millisecond)
 
 			sum.SetInt64(0)
 			for i := 0; i < num.Value(); i++ {
-				n, _ := rand.Int(rand.Reader, big.NewInt(*maxn))
+				n, _ := rand.Int(rand.Reader, big.NewInt(int64(math.Pow10(dig.Value()))))
+				outHand.text = ""
+				outArea.QueueRedrawAll()
+				<-time.After(50 * time.Millisecond)
 				outHand.text = n.String()
 				outArea.QueueRedrawAll()
 				sum.Add(sum, n)
@@ -68,39 +64,39 @@ func setupUI() {
 	number.SetChild(ovb)
 	hb.Append(number, true)
 
-	answer := ui.NewGroup("Answer")
-	ivb := ui.NewVerticalBox()
+	answer := NewGroup("Answer")
+	ivb := NewVerticalBox()
 
-	ansbox := ui.NewSpinbox(0, 1<<31-1)
+	ansbox := NewSpinbox(0, 1<<31-1)
 	ivb.Append(ansbox, true)
 
-	buttonTest := ui.NewButton("Test")
-	buttonTest.OnClicked(func(b *ui.Button) {
+	buttonTest := NewButton("Test")
+	buttonTest.OnClicked(func(b *Button) {
 		switch ansbox.Value() {
 		case int(sum.Int64()):
-			ui.MsgBox(win, "Right", "Correct answer: "+sum.String())
+			MsgBox(win, "Right", "Correct answer: "+sum.String())
 		default:
-			ui.MsgBoxError(win, "Wrong", "Correct answer: "+sum.String())
+			MsgBoxError(win, "Wrong", "Correct answer: "+sum.String())
 		}
 	})
 
 	ivb.Append(buttonTest, true)
 	answer.SetChild(ivb)
 	hb.Append(answer, true)
-	vb.Append(hb, true)
-	win.SetChild(vb)
+	content.Append(hb, true)
+	win.SetChild(content)
 	win.Show()
 }
 
-func mainWindows() *ui.Window {
-	win := ui.NewWindow("summation trainer", 0, 0, true)
-	win.OnClosing(func(w *ui.Window) bool {
-		ui.Quit()
+func mainWindows() *Window {
+	win := NewWindow("summation trainer", 0, 0, true)
+	win.OnClosing(func(w *Window) bool {
+		Quit()
 		return true
 	})
 	win.SetMargined(true)
 
-	ui.OnShouldQuit(func() bool {
+	OnShouldQuit(func() bool {
 		win.Destroy()
 		return true
 	})
@@ -108,8 +104,8 @@ func mainWindows() *ui.Window {
 	return win
 }
 
-func formSlider(form *ui.Form, label string, max int) (s *ui.Slider) {
-	s = ui.NewSlider(1, max)
+func formSlider(form *Form, label string, min, max int) (s *Slider) {
+	s = NewSlider(min, max)
 	form.Append(label, s, true)
 	return
 }
@@ -118,23 +114,23 @@ type areaHandler struct {
 	text string
 }
 
-func (h *areaHandler) Draw(a *ui.Area, p *ui.AreaDrawParams) {
-	layout := ui.DrawNewTextLayout(&ui.DrawTextLayoutParams{
-		String:      ui.NewAttributedString(h.text),
-		DefaultFont: &ui.FontDescriptor{Family: "Arial", Size: ui.TextSize(p.AreaHeight / 2), Weight: 20, Italic: 5, Stretch: 1},
+func (h *areaHandler) Draw(a *Area, p *AreaDrawParams) {
+	layout := DrawNewTextLayout(&DrawTextLayoutParams{
+		String:      NewAttributedString(h.text),
+		DefaultFont: &FontDescriptor{Family: "Arial", Size: TextSize(p.AreaHeight / 2), Weight: 20, Italic: 5, Stretch: 1},
 		Width:       p.AreaWidth,
 	})
 
-	p.Context.Text(layout, p.AreaWidth/2, 0)
+	p.Context.Text(layout, p.AreaWidth/2-p.AreaHeight/3*(float64(len([]rune(h.text)))/2), 0)
 	layout.Free()
 }
 
-func (areaHandler) MouseEvent(a *ui.Area, e *ui.AreaMouseEvent) {}
+func (areaHandler) MouseEvent(a *Area, e *AreaMouseEvent) {}
 
-func (areaHandler) MouseCrossed(a *ui.Area, b bool) {}
+func (areaHandler) MouseCrossed(a *Area, b bool) {}
 
-func (areaHandler) DragBroken(a *ui.Area) {}
+func (areaHandler) DragBroken(a *Area) {}
 
-func (areaHandler) KeyEvent(a *ui.Area, k *ui.AreaKeyEvent) bool {
+func (areaHandler) KeyEvent(a *Area, k *AreaKeyEvent) bool {
 	return false
 }
