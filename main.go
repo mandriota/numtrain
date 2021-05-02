@@ -43,7 +43,11 @@ func setupUI() {
 
 	sum := big.NewInt(0)
 	buttonGo := NewButton("Go!")
+	buttonTest := NewButton("Test")
 	buttonGo.OnClicked(func(b *Button) {
+		buttonGo.Disable()
+		buttonTest.Disable()
+
 		go func() {
 			ticker := time.NewTicker(time.Duration(dur.Value()) * time.Millisecond)
 
@@ -61,6 +65,9 @@ func setupUI() {
 			}
 
 			ticker.Stop()
+
+			buttonGo.Enable()
+			buttonTest.Enable()
 		}()
 	})
 
@@ -74,7 +81,6 @@ func setupUI() {
 	ansbox := NewSpinbox(0, 1<<31-1)
 	ivb.Append(ansbox, true)
 
-	buttonTest := NewButton("Test")
 	buttonTest.OnClicked(func(b *Button) {
 		switch ansbox.Value() {
 		case int(sum.Int64()):
