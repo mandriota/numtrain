@@ -1,10 +1,14 @@
 package main
 
+//#include <windows.h>
+import "C"
 import (
 	"crypto/rand"
+	"fmt"
 	"math"
 	"math/big"
 	"time"
+	"unsafe"
 
 	. "github.com/andlabs/ui"
 )
@@ -20,9 +24,9 @@ func setupUI() {
 	params := NewGroup("Parameters")
 	form := NewForm()
 
-	dur := formSlider(form, "Showing time(ms)", 100, 5000)
-	num := formSlider(form, "Shows number", 1, 50)
-	dig := formSlider(form, "Digits number", 1, 10)
+	dur := formSlider(form, "Showing time", "%dms", 100, 5000)
+	num := formSlider(form, "Shows number", "%dx", 1, 50)
+	dig := formSlider(form, "Digits number", "%dx", 1, 10)
 
 	params.SetChild(form)
 	content.Append(params, true)
@@ -85,7 +89,7 @@ func setupUI() {
 	hb.Append(answer, true)
 	content.Append(hb, true)
 	win.SetChild(content)
-	win.Show()
+	C.SetWindowPos(C.HWND(unsafe.Pointer(win.Handle())), C.HWND_TOPMOST, C.int(0), C.int(0), C.int(0), C.int(0), C.SWP_NOSIZE|C.SWP_NOMOVE|C.SWP_SHOWWINDOW|C.SWP_ASYNCWINDOWPOS)
 }
 
 func mainWindows() *Window {
@@ -104,9 +108,16 @@ func mainWindows() *Window {
 	return win
 }
 
-func formSlider(form *Form, label string, min, max int) (s *Slider) {
+func formSlider(form *Form, label, format string, min, max int) (s *Slider) {
+	vb := NewVerticalBox()
 	s = NewSlider(min, max)
-	form.Append(label, s, true)
+	l := NewLabel(fmt.Sprintf(format, s.Value()))
+	s.OnChanged(func(s *Slider) {
+		l.SetText(fmt.Sprintf(format, s.Value()))
+	})
+	vb.Append(l, false)
+	vb.Append(s, false)
+	form.Append(label, vb, true)
 	return
 }
 
